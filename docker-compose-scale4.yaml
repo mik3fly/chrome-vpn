@@ -31,10 +31,12 @@ services:
       - chrome-vpn2
       - chrome-vpn3
       - chrome-vpn4
+      - chrome-vpn5
+      - chrome-vpn6
     environment:
       FRONTEND_PORT: 3000
       BACKENDS_PORT: 3000
-      BACKENDS: "chrome-vpn1 chrome-vpn2 chrome-vpn3 chrome-vpn4"
+      BACKENDS: "chrome-vpn1 chrome-vpn2 chrome-vpn3 chrome-vpn4 chrome-vpn5 chrome-vpn6"
       HTTPCHK: "HEAD /health"
       HTTPCHKPORT: 8080
 
@@ -51,15 +53,17 @@ services:
       - chrome-vpn2
       - chrome-vpn3
       - chrome-vpn4
+      - chrome-vpn5
+      - chrome-vpn6
     environment:
       FRONTEND_PORT: 3001
       BACKENDS_PORT: 3001
-      BACKENDS: "chrome-vpn1 chrome-vpn2 chrome-vpn3 chrome-vpn4"
+      BACKENDS: "chrome-vpn1 chrome-vpn2 chrome-vpn3 chrome-vpn4 chrome-vpn5 chrome-vpn6"
       HTTPCHK: "HEAD /health"
       HTTPCHKPORT: 8080
 
   chrome-vpn1: &chrome-vpn
-    image: ericdraken/chrome-vpn:armv7
+    image: akcd
     restart: unless-stopped
     cap_add:
       - NET_ADMIN # Needed for VPN tunnel adapter
@@ -76,6 +80,7 @@ services:
       - ./.chromium.sh:/app/chromium/chromium.sh:ro
       - /dev/shm:/dev/shm # Use shared memory with the host
       - ./usedvpns:/usedvpns
+      - myvolumes:/ovpn
     tmpfs:
       - /tmp
     env_file:
@@ -93,6 +98,13 @@ services:
   chrome-vpn4:
     <<: *chrome-vpn
 
+  chrome-vpn5:
+    <<: *chrome-vpn
+
+  chrome-vpn6:
+    <<: *chrome-vpn
+
+
   echo:
     build:
       context: echo
@@ -101,3 +113,7 @@ services:
       - proxynet
     expose:
       - 8080
+
+
+volumes:
+  myvolumes:

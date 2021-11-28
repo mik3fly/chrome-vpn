@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   chrome-vpn:
-    image: ericdraken/chrome-vpn:armv7
+    image: akcd
     cap_add:
       - NET_ADMIN # Needed for VPN tunnel adapter
     ports:
@@ -17,8 +17,13 @@ services:
       - ./.chromium.sh:/app/chromium/chromium.sh:ro
       - /dev/shm:/dev/shm # Use shared memory with the host
       - ./usedvpns:/usedvpns
+      - myvolumes:/ovpn
     tmpfs:
       - /tmp
     env_file:
       - ./env/chrome-vpn.env
       - ./env/password.env
+
+
+volumes:
+  myvolumes:

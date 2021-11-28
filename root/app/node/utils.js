@@ -12,7 +12,9 @@ const AdmZip = require('adm-zip');
  */
 const downloadOVPNFiles = async (ovpnUrl, ovpnFolder) => {
     if (await isDirEmpty(ovpnFolder) !== true) {
-        console.log("Download of OVPN files not needed");
+        const files = fs.readdirSync(ovpnFolder)
+        console.log(files.length);
+        console.log(`Files count : ${files.length}`);
         return;
     }
     await axios.get(ovpnUrl, {responseType: "arraybuffer"})
@@ -35,11 +37,25 @@ const getRandomVPNConfig = async (apiUrl, countries, protocol, category, maxLoad
     // TODO: Make sure server is reachable first or else it will hang
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    return axios.get(apiUrl, { responseType: 'json', timeout: 5000 })
-        .then((response) => {
-            console.log(`Found ${response.data.length} servers`);
-            return {data: response.data};
-        })
+    const downloadRandomConfig = new Promise(async (resolve, reject) => {
+        if (fs.existsSync('/ovpn/randomVPNConfig.json')) {
+            console.log('File already exists ');
+            const file = fs.readFileSync('/ovpn/randomVPNConfig.json', 'utf-8');
+            resolve({ data : JSON.parse(file) });
+        } else {
+            console.log('File doesn\'t exists');
+            await axios.get(apiUrl, { responseType: 'json', timeout: 5000 })
+                .then((response) => {
+                    fs.writeFileSync('/ovpn/randomVPNConfig.json', JSON.stringify(response.data));
+                    resolve({ data : response.data })
+                }).catch(e => {
+                    console.log(e);
+                    reject(e);
+            })
+        }
+    });
+
+    return downloadRandomConfig
         // Country
         .then(async (json) => {
             let filtered = [];
