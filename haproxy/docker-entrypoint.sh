@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -xe
+
 # haproxy not directly configured within /etc/haproxy/haproxy.cfg
 if ! test -e /etc/haproxy/haproxy.cfg; then
 
@@ -60,8 +62,17 @@ if ! test -e /etc/haproxy/haproxy.cfg; then
   if [ ! -z "$TIMEOUT_SERVER" ]; then echo "export TIMEOUT_SERVER=\"$TIMEOUT_SERVER\"" >>/etc/environment; fi
 fi
 
+echo "lol"
+
+
+cat  /etc/haproxy/haproxy.cfg
+cat /usr/local/etc/haproxy/haproxy.cfg
+
+
+cat /haproxy-entrypoint.sh
+
 # Start logging
-service rsyslog restart
+#service rsyslog start
 
 # Start crontab with no logging except errors
 # See: systemctl edit --full cron.service

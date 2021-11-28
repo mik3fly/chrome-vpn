@@ -24,19 +24,12 @@ Excellent details are at the maintainer's repo: [browserless/chrome](https://git
 
 Container images are configured using environment variables passed at runtime.
 
- * `USE_CHROME_STABLE` - Use 'true' to use only the latest stable Chrome release
- * `COUNTRY`           - Use servers from countries in the list (IE Australia;New Zeland). Several countries can be selected using semicolon.
- * `CATEGORY`          - Use servers from specific categories (IE P2P;Anti DDoS). Several categories can be selected using semicolon. Allowed categories are:
+ * `COUNTRIES`         - Use servers from countries in the list (Singapore,Mexico). Several countries can be selected using commas.
+ * `CATEGORY`          - Use servers from a specific category. Allowed categories are:
    * `Dedicated IP`
    * `Double VPN`
-   * `Obfuscated Servers`
    * `P2P`
    * `Standard VPN servers`
- * `PROTOCOL`          - Specify OpenVPN protocol. Only one protocol can be selected. Allowed protocols are:
-   * `openvpn_udp`
-   * `openvpn_tcp`
- * `RANDOM_TOP`        - Place n servers from filtered list in random order. Useful with `RECREATE_VPN_CRON`.
- * `RECREATE_VPN_CRON` - Set period of selecting new server in format for crontab file. Disabled by default.
  * `VPN_USER`          - User for NordVPN account.
  * `VPN_PASS`          - Password for NordVPN account.
  * `NETWORK`           - CIDR network (IE 192.168.1.0/24), add a route to allows replies once the VPN is up.
@@ -49,7 +42,7 @@ Container images are configured using environment variables passed at runtime.
 
 The list of keywords for environment variables might be changed, check the allowed keywords by the following commands:
 
-`COUNTRY`
+`COUNTRIES`
 ```
 curl -s https://api.nordvpn.com/server | jq -c '.[] | .country' | jq -s -a -c 'unique | .[]'
 ```
@@ -61,43 +54,39 @@ curl -s https://api.nordvpn.com/server | jq -c '.[] | .categories[].name' | jq -
 
 ## Easy Setup
 
-Copy the `.env.tmpl` file to `.env` and populate. Then run `docker-compose up`. Navigate to `http://localhost:3000` to
+Copy the `env/chrome-vpn.env.tmpl` file to `env/chrome-vpn.env`, and `env/password.env.tmpl` file to `env/password.env`, and populate. Then run `docker-compose up`. Navigate to `http://localhost:3000` to
 be treated to the Chrome debugger playground. If you need to bypass Chrome, you can use port 3001 as the proxy port.
 
 ```yaml
-version: '3'
+version: '3.5'
 
 services:
   chrome-vpn:
-    image: 'ericdraken/chrome-vpn:latest'
+    image: ericdraken/chrome-vpn:armv7
     restart: unless-stopped
     cap_add:
       - NET_ADMIN # Needed for VPN tunnel adapter
     ports:
       - "${CHROME_RDP_PORT:-3000}:3000"
       - "${PROXY_PORT:-3001}:3001"
+    expose:
+      - 8080 # Actuator port
     dns:
       - "${DNS_SERVER_1:-9.9.9.9}"
       - "${DNS_SERVER_2:-1.1.1.1}"
-    environment:
-      VPN_USER: "$VPN_USER"
-      VPN_PASS: "$VPN_PASS"
-        # curl -s https://api.nordvpn.com/server | jq -c '.[] | .country' | jq -s -a -c 'unique | .[]'
-      COUNTRY: "${COUNTRY:-United States}"
-        # curl -s https://api.nordvpn.com/server | jq -c '.[] | .categories[].name' | jq -s -a -c 'unique | .[]'
-      OPENVPN_OPTS: "${OPENVPN_OPTS:---pull-filter ignore \"ping-restart\" --ping-exit 180}"
-      CATEGORY: "${CATEGORY:-Standard VPN servers}"
-      RANDOM_TOP: "${RANDOM_TOP:-10}"
-      RECREATE_VPN_CRON: "${RECREATE_VPN_CRON:-''}"
-        # ip route | awk '!/ (docker0|br-)/ && /src/ {print $1}'
-      NETWORK: "${NETWORK:-192.168.0.0/24}"
-      TZ: "${TZ:-America/Vancouver}"
-      TEST_URL: "${TEST_URL:-https://1.1.1.1/}"
+    volumes:
+      - ./.chromium.sh:/app/chromium/chromium.sh:ro
+      - /dev/shm:/dev/shm # Use shared memory with the host
+    tmpfs:
+      - /tmp
+    env_file:
+      - ./env/chrome-vpn.env
+      - ./env/password.env
 ```
 
 ## Multiple simultaneous Chrome+VPN instances
 
-Run `docker-compose -f docker-compose-scale.yaml up --scale chrome-vpn=3` to launch three Chrome+VPN instances
+Run `docker-compose -f docker-compose-scale[2,3].yaml up` to launch two or three Chrome+VPN instances
 at random VPN servers for a round-robin VPN experience. Every time you execute a Chrome navigation, it will originate from
 a different VPN server.
 
@@ -111,11 +100,13 @@ You can query these localhost:8080 actuator endpoints for status updates and to 
 
 * `/status` - Is the VPN client running?
 * `/up` - Can the TEST_URL be curled for a 200-response?
+* `/health` - Using a HEAD request check if the openvpn server is functioning
 * `/ip` - Get the current external IP
 * `/ipinfo` - Get the ipinfo.io JSON response
 * `/region` - Get the region of the VPN exit node
 * `/randomvpn` - Restart the VPN client and wait until `/up` is successful: 'ok' or 'failed'
-* `/kill` - Kill the container completely
+* `/shutdown` - Kill the container completely
+* `/speedtest` - Get a JSON result of a speedtest.net test
 
 Actuator endpoints are best hit when using the port 3001 proxy into the container rather than directly trying
 to bind port 8080 to a host port for security purposes.
