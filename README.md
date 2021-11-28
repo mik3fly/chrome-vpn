@@ -86,7 +86,7 @@ services:
 
 ## Multiple simultaneous Chrome+VPN instances
 
-Run `docker-compose -f docker-compose-scale[2,3].yaml up` to launch two or three Chrome+VPN instances
+Run `docker-compose -f docker-compose-scale[2,6].yaml up` to launch two or three Chrome+VPN instances
 at random VPN servers for a round-robin VPN experience. Every time you execute a Chrome navigation, it will originate from
 a different VPN server.
 
