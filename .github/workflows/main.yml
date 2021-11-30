@@ -3,33 +3,7 @@ on:
   push:
     branches:
       - master
-      - armv7
 jobs:
-  build-armv7:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup QEMU user-mode emulation
-        run: |-
-          sudo apt-get update
-          sudo apt-get install -y qemu-user-static
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: crazy-max/ghaction-docker-buildx@v1.0.5
-        with:
-          version: latest
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
-      - name: DockerHub Login
-        run: docker login -u ${{ secrets.DOCKERHUB_USER }} --password-stdin <<< "${{ secrets.DOCKERHUB_KEY }}"
-      - name: Github Package Registry Login
-        run: docker login docker.pkg.github.com -u ${{ secrets.GITHUB_USER }} --password-stdin <<< "${{ secrets.TOKEN }}"
-      - name: Build Docker Image - ARM V7
-        env:
-            IMAGE_NAME: chrome-vpn
-        run: |
-            docker buildx build --platform linux/arm/v7 --tag ${{ secrets.DOCKERHUB_USER }}/$IMAGE_NAME:armv7 --build-arg S6_FILE=s6-overlay-armhf.tar.gz --build-arg BASE_IMAGE=ericdraken/browserless-chrome:armv7 --push .
-
   build-x86_64:
     runs-on: ubuntu-latest
     steps:
