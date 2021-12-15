@@ -79,6 +79,12 @@ services:
     environment:
       MAX_CONCURRENT_SESSIONS: 5
 
+  settings:
+    build:
+      context: settings
+    networks:
+      - proxynet
+
   echo:
     build:
       context: echo

@@ -105,6 +105,12 @@ services:
     <<: *chrome-vpn
 
 
+  settings:
+    build:
+      context: settings
+    networks:
+      - proxynet
+
   echo:
     build:
       context: echo

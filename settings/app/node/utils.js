@@ -17,7 +17,6 @@ const downloadOVPNFiles = async (ovpnUrl, ovpnFolder) => {
         console.log(`Files count : ${files.length}`);
         return;
     }
-    console.log(`downloading ovpn files with ${ovpnUrl}`);
     await axios.get(ovpnUrl, {responseType: "arraybuffer"})
         .then((response) => {
             const zip = new AdmZip(response.data);
@@ -35,7 +34,6 @@ const downloadOVPNFiles = async (ovpnUrl, ovpnFolder) => {
 
 const downloadVPNConfigFile = async (apiUrl) => {
     return new Promise(async (resolve, reject) => {
-        console.log(`downloading ovpn files with ${apiUrl}`);
         await axios.get(apiUrl, {responseType: 'json', timeout: 5000})
             .then((response) => {
                 fs.writeFileSync('/ovpn/randomVPNConfig.json', JSON.stringify(response.data));
@@ -168,43 +166,9 @@ function isDirEmpty(dirname) {
         return files.length === 0;
     });
 }
-async function waitForFileToBeAvailable() {
-
-    let randomVPNConfigExists = fs.existsSync("/ovpn/randomVPNConfig.json");
-    let isNotEmptyDir = !isDirEmpty("/ovpn/");
-    while (randomVPNConfigExists && isNotEmptyDir) {
-        await delay(getRandomNumber());
-        randomVPNConfigExists = fs.existsSync("/ovpn/randomVPNConfig.json");
-        isNotEmptyDir = !isDirEmpty("/ovpn/");
-    }
-}
-
-
-function getRandomNumber() {
-    return Math.floor(Math.random() * 150000);
-}
-
-async function delay(delayInMs) {
-    return new Promise((resolve, reject) => {
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        console.warn(`delay before starting ${delayInMs} ms`)
-        setTimeout(() => {
-            resolve();
-        }, delayInMs);
-    })
-}
-
 
 module.exports = {
     getRandomVPNConfig: getRandomVPNConfig,
     downloadVPNConfigFile: downloadVPNConfigFile,
-    downloadOVPNFiles: downloadOVPNFiles,
-    waitForFileToBeAvailable: waitForFileToBeAvailable
+    downloadOVPNFiles: downloadOVPNFiles
 };
