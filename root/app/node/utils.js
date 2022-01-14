@@ -181,7 +181,7 @@ async function waitForFileToBeAvailable() {
 
 
 function getRandomNumber() {
-    return Math.floor(Math.random() * 150000);
+    return Math.floor(Math.random() * 75000);
 }
 
 async function delay(delayInMs) {
